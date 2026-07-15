@@ -56,12 +56,12 @@ def collect_predictions(model, loader, device):
     return np.array(all_labels), np.array(all_preds), np.array(all_probs)
 
 
-def plot_confusion_matrix(y_true, y_pred, model_name):
+def plot_confusion_matrix(y_true, y_pred, model_name, ordered_class_names):
     cm = confusion_matrix(y_true, y_pred)
     plt.figure(figsize=(6, 5))
     sns.heatmap(
         cm, annot=True, fmt="d", cmap="Blues",
-        xticklabels=CLASS_NAMES, yticklabels=CLASS_NAMES,
+        xticklabels=ordered_class_names, yticklabels=ordered_class_names,
     )
     plt.xlabel("Predicted")
     plt.ylabel("Actual")
@@ -73,11 +73,11 @@ def plot_confusion_matrix(y_true, y_pred, model_name):
     return out_path
 
 
-def plot_roc_curves(y_true, y_probs, model_name):
-    y_true_bin = label_binarize(y_true, classes=range(len(CLASS_NAMES)))
+def plot_roc_curves(y_true, y_probs, model_name, ordered_class_names):
+    y_true_bin = label_binarize(y_true, classes=range(len(ordered_class_names)))
 
     plt.figure(figsize=(6, 5))
-    for i, cls in enumerate(CLASS_NAMES):
+    for i, cls in enumerate(ordered_class_names):
         fpr, tpr, _ = roc_curve(y_true_bin[:, i], y_probs[:, i])
         auc = roc_auc_score(y_true_bin[:, i], y_probs[:, i])
         plt.plot(fpr, tpr, label=f"{cls} (AUC={auc:.3f})")
@@ -107,7 +107,14 @@ def evaluate_model(model_name: str):
     model = build_model(model_name).to(device)
     model.load_state_dict(checkpoint["model_state_dict"])
 
-    _, _, test_loader, _ = get_dataloaders()
+    _, _, test_loader, class_to_idx = get_dataloaders()
+    # class_to_idx is the ground truth for which label index means which
+    # class (ImageFolder assigns indices alphabetically, e.g. Benign=0,
+    # Malignant=1, Normal=2) — never assume CLASS_NAMES' written order
+    # matches this, always derive display order from it directly.
+    ordered_class_names = [
+        name for name, _ in sorted(class_to_idx.items(), key=lambda kv: kv[1])
+    ]
     y_true, y_pred, y_probs = collect_predictions(model, test_loader, device)
 
     accuracy = accuracy_score(y_true, y_pred)
@@ -115,18 +122,18 @@ def evaluate_model(model_name: str):
         y_true, y_pred, average="weighted", zero_division=0
     )
 
-    y_true_bin = label_binarize(y_true, classes=range(len(CLASS_NAMES)))
+    y_true_bin = label_binarize(y_true, classes=range(len(ordered_class_names)))
     try:
         roc_auc_macro = roc_auc_score(y_true_bin, y_probs, average="macro", multi_class="ovr")
     except ValueError:
         roc_auc_macro = None  # can happen if a class is entirely absent from the test split
 
-    report_text = classification_report(y_true, y_pred, target_names=CLASS_NAMES, zero_division=0)
+    report_text = classification_report(y_true, y_pred, target_names=ordered_class_names, zero_division=0)
     report_path = METRICS_DIR / f"{model_name}_classification_report.txt"
     report_path.write_text(report_text)
 
-    cm_path = plot_confusion_matrix(y_true, y_pred, model_name)
-    roc_path = plot_roc_curves(y_true, y_probs, model_name)
+    cm_path = plot_confusion_matrix(y_true, y_pred, model_name, ordered_class_names)
+    roc_path = plot_roc_curves(y_true, y_probs, model_name, ordered_class_names)
 
     metrics = {
         "model_name": model_name,
