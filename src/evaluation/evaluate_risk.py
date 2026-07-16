@@ -14,6 +14,11 @@ from pathlib import Path
 
 import numpy as np
 import joblib
+import matplotlib
+matplotlib.use("Agg")  # non-interactive backend — we only ever save PNGs to
+                        # disk, never display a window, so this avoids the
+                        # Tkinter/PIL DLL crash some locked-down Windows
+                        # setups hit with the default backend
 import matplotlib.pyplot as plt
 import seaborn as sns
 from sklearn.metrics import (

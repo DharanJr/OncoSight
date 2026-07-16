@@ -38,7 +38,18 @@ SCORING = ["accuracy", "f1_weighted", "precision_weighted", "recall_weighted"]
 
 
 def run_cross_validation(model_name: str, X_train, y_train):
-    skf = StratifiedKFold(n_splits=CLINICAL_CV_FOLDS, shuffle=True, random_state=RANDOM_SEED)
+    # With duplicates removed, the training set is much smaller (~120 rows
+    # rather than 800), so the smallest class might not have enough samples
+    # for the configured fold count. Reduce folds rather than crash.
+    min_class_count = np.bincount(y_train).min()
+    n_folds = min(CLINICAL_CV_FOLDS, min_class_count)
+    if n_folds < CLINICAL_CV_FOLDS:
+        print(
+            f"[WARN] Smallest class has only {min_class_count} training samples — "
+            f"reducing cross-validation from {CLINICAL_CV_FOLDS} to {n_folds} folds."
+        )
+
+    skf = StratifiedKFold(n_splits=n_folds, shuffle=True, random_state=RANDOM_SEED)
     model = build_risk_model(model_name)
 
     cv_results = cross_validate(

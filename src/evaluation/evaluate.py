@@ -19,6 +19,9 @@ from pathlib import Path
 
 import numpy as np
 import torch
+import matplotlib
+matplotlib.use("Agg")  # non-interactive backend — avoids a Tkinter/PIL DLL
+                        # crash some locked-down Windows setups hit
 import matplotlib.pyplot as plt
 import seaborn as sns
 from sklearn.metrics import (
@@ -103,7 +106,12 @@ def evaluate_model(model_name: str):
 
     print(f"\n{'=' * 60}\nEvaluating {model_name}\n{'=' * 60}")
 
-    checkpoint = torch.load(checkpoint_path, map_location=device)
+    # weights_only=False is required here because our checkpoints bundle a
+    # plain dict (class_to_idx, model_name) alongside the tensor weights, not
+    # just tensors. Safe in this project since we only ever load checkpoints
+    # this same codebase wrote — never load a checkpoint from an untrusted
+    # source with weights_only=False.
+    checkpoint = torch.load(checkpoint_path, map_location=device, weights_only=False)
     model = build_model(model_name).to(device)
     model.load_state_dict(checkpoint["model_state_dict"])
 

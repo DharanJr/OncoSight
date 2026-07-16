@@ -100,9 +100,25 @@ def clean_dataframe(df: pd.DataFrame) -> pd.DataFrame:
     df = df.copy()
 
     # Drop identifier columns if present
-    cols_to_drop = [c for c in CLINICAL_ID_COLUMNS if c.strip() in df.columns]
+    cols_to_drop = [c.strip() for c in CLINICAL_ID_COLUMNS if c.strip() in df.columns]
     if cols_to_drop:
         df = df.drop(columns=cols_to_drop)
+
+    # De-duplicate BEFORE splitting into train/test. This dataset ships with
+    # a large number of exact duplicate rows (verified: ~85% of rows in the
+    # "Cancer Patient Data Sets" release are copies of other rows). Without
+    # this step, the same patient record ends up in both the train and test
+    # split, which means test accuracy measures memorization, not
+    # generalization — inflating every model to a meaningless ~100%.
+    n_before = len(df)
+    df = df.drop_duplicates().reset_index(drop=True)
+    n_after = len(df)
+    if n_before != n_after:
+        print(
+            f"[INFO] Removed {n_before - n_after} duplicate rows "
+            f"({n_before} -> {n_after} unique patient records). "
+            "This is expected for this dataset and prevents train/test leakage."
+        )
 
     if RISK_TARGET_COLUMN not in df.columns:
         raise ValueError(

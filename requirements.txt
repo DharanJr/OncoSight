@@ -17,8 +17,12 @@ opencv-python-headless>=4.9.0
 Pillow>=10.2.0
 albumentations>=1.4.0
 
-# Explainability (Module 3, wired in later)
+# Explainability (Module 3)
 grad-cam>=1.5.0
+# Note: shap is intentionally NOT listed here — it depends on numba, whose
+# compiled DLL gets blocked by Windows Application Control on this dev
+# machine. src/explainability/shap_risk.py implements the same idea
+# (per-prediction tree contribution explanations) with plain NumPy instead.
 
 # Metrics / plotting
 matplotlib>=3.8.0
