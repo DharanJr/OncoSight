@@ -46,7 +46,7 @@ IDX_TO_CLASS = {idx: name for name, idx in CLASS_TO_IDX.items()}
 # Image / training hyperparameters
 # ---------------------------------------------------------------------------
 IMAGE_SIZE = 224
-BATCH_SIZE = 16
+BATCH_SIZE = 32
 NUM_WORKERS = 2  # lower this to 0 on Windows if you hit multiprocessing issues
 
 TRAIN_SPLIT = 0.70
@@ -71,3 +71,33 @@ LR_SCHEDULER_FACTOR = 0.5
 AVAILABLE_MODELS = ["cnn_baseline", "resnet50", "efficientnet_b0"]
 
 DEVICE = "cuda"  # train.py falls back to "cpu" automatically if CUDA isn't available
+
+# ---------------------------------------------------------------------------
+# Module 2 — Clinical Risk Prediction
+# ---------------------------------------------------------------------------
+# The CSV can live directly in data/raw/ or in data/raw/clinical/ — the loader
+# (src/data/clinical_dataset.py) searches both and matches by filename pattern,
+# so exact placement/naming isn't fragile the way early image-folder naming was.
+CLINICAL_DATA_DIR = PROJECT_ROOT / "data" / "raw"
+CLINICAL_PROCESSED_DIR = PROJECT_ROOT / "data" / "processed" / "clinical"
+CLINICAL_PROCESSED_DIR.mkdir(parents=True, exist_ok=True)
+
+RISK_MODEL_DIR = PROJECT_ROOT / "checkpoints" / "risk_models"
+RISK_MODEL_DIR.mkdir(parents=True, exist_ok=True)
+
+# Target column in the "Cancer Patient Data Sets" Kaggle dataset is "Level"
+# with values Low / Medium / High. Ordinal on purpose (not one-hot) — risk
+# has a natural order, and metrics/plots read better as an ordered scale.
+RISK_TARGET_COLUMN = "Level"
+RISK_CLASSES = ["Low", "Medium", "High"]
+RISK_CLASS_TO_IDX = {name: idx for idx, name in enumerate(RISK_CLASSES)}
+
+# Columns to drop if present — identifier columns carry no predictive signal
+# and risk leaking a patient index into the model as a "feature".
+CLINICAL_ID_COLUMNS = ["index", "Patient Id", "Patient Id ", "Unnamed: 0"]
+
+CLINICAL_TEST_SPLIT = 0.20
+CLINICAL_CV_FOLDS = 5  # stratified k-fold, used instead of a single train/test
+                        # split for model selection — more reliable on a
+                        # smaller tabular dataset than one lucky/unlucky split
+RISK_AVAILABLE_MODELS = ["logistic_regression", "random_forest", "xgboost", "lightgbm"]
