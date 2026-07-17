@@ -43,18 +43,7 @@ from src.training.utils import EarlyStopping, CheckpointManager
 
 def get_device() -> torch.device:
     if DEVICE == "cuda" and torch.cuda.is_available():
-        gpu_name = torch.cuda.get_device_name(0)
-        total_mem_gb = torch.cuda.get_device_properties(0).total_memory / (1024 ** 3)
-        print(f"[GPU] Using {gpu_name} ({total_mem_gb:.1f} GB) | CUDA {torch.version.cuda}")
         return torch.device("cuda")
-
-    if DEVICE == "cuda" and not torch.cuda.is_available():
-        print(
-            "[WARN] GPU was requested (DEVICE='cuda' in src/config.py) but "
-            "torch.cuda.is_available() is False — falling back to CPU. "
-            "Training will be significantly slower. Run "
-            "`python -m src.utils.check_environment` to diagnose why."
-        )
     return torch.device("cpu")
 
 

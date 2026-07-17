@@ -101,3 +101,32 @@ CLINICAL_CV_FOLDS = 5  # stratified k-fold, used instead of a single train/test
                         # split for model selection — more reliable on a
                         # smaller tabular dataset than one lucky/unlucky split
 RISK_AVAILABLE_MODELS = ["logistic_regression", "random_forest", "xgboost", "lightgbm"]
+
+# ---------------------------------------------------------------------------
+# Module 4 — Multimodal Fusion
+# ---------------------------------------------------------------------------
+# IMPORTANT: the CT image dataset and clinical risk dataset have NO shared
+# patients — they come from unrelated sources. There is no real paired
+# multimodal data to fuse. This module builds a SYNTHETIC demonstration:
+# randomly pairs one image-model prediction with one clinical-model
+# prediction to simulate what a combined patient record would look like,
+# then trains a meta-classifier on those pairs. This demonstrates the fusion
+# architecture and technique correctly, but the trained fusion model's
+# accuracy does NOT represent real-world combined-diagnosis performance —
+# state this explicitly in any report/viva discussion of this module.
+FUSION_DIR = PROJECT_ROOT / "checkpoints" / "fusion"
+FUSION_DIR.mkdir(parents=True, exist_ok=True)
+FUSION_PROCESSED_DIR = PROJECT_ROOT / "data" / "processed" / "fusion"
+FUSION_PROCESSED_DIR.mkdir(parents=True, exist_ok=True)
+
+FUSION_N_SYNTHETIC_PAIRS = 800
+FUSION_TEST_SPLIT = 0.20
+
+# Maps each modality's classes onto a shared 0/1/2 severity scale so the two
+# independent ground truths can be combined into one target for the
+# synthetic pairs. Rule: combined severity = the MORE severe of the two
+# assessments (clinically conservative — if either signal suggests high
+# risk, treat the combined case as high risk).
+IMAGE_SEVERITY = {"Normal": 0, "Benign": 1, "Malignant": 2}
+CLINICAL_SEVERITY = {"Low": 0, "Medium": 1, "High": 2}
+FUSION_CLASSES = ["Low", "Medium", "High"]  # combined severity labels, reusing risk naming
