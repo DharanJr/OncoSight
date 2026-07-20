@@ -130,3 +130,17 @@ FUSION_TEST_SPLIT = 0.20
 IMAGE_SEVERITY = {"Normal": 0, "Benign": 1, "Malignant": 2}
 CLINICAL_SEVERITY = {"Low": 0, "Medium": 1, "High": 2}
 FUSION_CLASSES = ["Low", "Medium", "High"]  # combined severity labels, reusing risk naming
+
+# ---------------------------------------------------------------------------
+# Module 5 — LLM Report Generation (local, FREE — no API billing required)
+# ---------------------------------------------------------------------------
+REPORT_DIR = PROJECT_ROOT / "outputs" / "reports"
+REPORT_DIR.mkdir(parents=True, exist_ok=True)
+
+# Uses Ollama (https://ollama.com) running locally — no API key, no billing,
+# no internet required after the model is downloaded once. Falls back to a
+# template-based generator automatically (src/reports/template_report.py)
+# if Ollama isn't running, so report generation never hard-fails.
+OLLAMA_BASE_URL = "http://localhost:11434"
+OLLAMA_MODEL = "llama3.2:3b"  # ~2GB quantized — comfortable on 6GB VRAM
+LLM_TIMEOUT_SECONDS = 60

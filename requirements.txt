@@ -17,6 +17,10 @@ opencv-python-headless>=4.9.0
 Pillow>=10.2.0
 albumentations>=1.4.0
 
+# Report generation (Module 5) — uses Ollama (local, free) via HTTP;
+# Ollama itself is installed separately (https://ollama.com), not via pip.
+requests>=2.31.0
+
 # Explainability (Module 3)
 grad-cam>=1.5.0
 # Note: shap is intentionally NOT listed here — it depends on numba, whose
