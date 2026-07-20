@@ -21,6 +21,15 @@ albumentations>=1.4.0
 # Ollama itself is installed separately (https://ollama.com), not via pip.
 requests>=2.31.0
 
+# RAG Assistant (Module 6)
+pypdf>=4.0.0
+# Real embeddings + FAISS (preferred). If either fails to import due to a
+# blocked compiled DLL (same issue category as numba/shap earlier), the
+# code automatically falls back to TF-IDF (scikit-learn only, already a
+# dependency above) — no action needed either way.
+sentence-transformers>=2.6.0
+faiss-cpu>=1.8.0
+
 # Explainability (Module 3)
 grad-cam>=1.5.0
 # Note: shap is intentionally NOT listed here — it depends on numba, whose

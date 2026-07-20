@@ -144,3 +144,42 @@ REPORT_DIR.mkdir(parents=True, exist_ok=True)
 OLLAMA_BASE_URL = "http://localhost:11434"
 OLLAMA_MODEL = "llama3.2:3b"  # ~2GB quantized — comfortable on 6GB VRAM
 LLM_TIMEOUT_SECONDS = 60
+
+# ---------------------------------------------------------------------------
+# Module 6 — RAG Medical Assistant
+# ---------------------------------------------------------------------------
+KNOWLEDGE_BASE_DIR = PROJECT_ROOT / "knowledge_base"
+RAG_INDEX_DIR = PROJECT_ROOT / "data" / "processed" / "rag"
+RAG_INDEX_DIR.mkdir(parents=True, exist_ok=True)
+
+RAG_CHUNK_SIZE = 500       # characters per chunk
+RAG_CHUNK_OVERLAP = 100    # characters shared between consecutive chunks
+RAG_TOP_K = 4              # how many chunks to retrieve per query
+RAG_RELEVANCE_THRESHOLD = 0.25  # below this similarity, treat as "no good answer"
+                                  # rather than let the LLM improvise — this is
+                                  # what prevents hallucination on off-topic questions
+EMBEDDING_MODEL_NAME = "all-MiniLM-L6-v2"  # per project spec
+
+# Second, independent guard against off-topic questions slipping through on a
+# lucky similarity score alone — the query must ALSO contain at least one of
+# these terms. Belt-and-suspenders: similarity score catches semantic
+# mismatches, this keyword check catches accidental term-overlap false
+# positives (e.g. a question about "risk" in an unrelated context).
+RAG_TOPIC_KEYWORDS = {
+    "lung", "cancer", "tumor", "tumour", "smoking", "smoke", "carcinoma",
+    "nodule", "chest", "biopsy", "oncology", "metastasis", "screening",
+    "chemotherapy", "radiation", "staging", "malignant", "benign", "cough",
+    "breath", "respiratory", "pulmonary", "diagnosis", "treatment", "symptom",
+}
+
+# Maps filename keywords to a proper display name for citations, so answers
+# say "World Health Organization" instead of a raw PDF filename. Add entries
+# here if you download PDFs with different naming than these organizations'
+# typical export names.
+RAG_SOURCE_DISPLAY_NAMES = {
+    "who": "World Health Organization (WHO)",
+    "nci": "National Cancer Institute (NCI)",
+    "cdc": "Centers for Disease Control and Prevention (CDC)",
+    "cancer.org": "American Cancer Society (ACS)",
+    "acs": "American Cancer Society (ACS)",
+}
